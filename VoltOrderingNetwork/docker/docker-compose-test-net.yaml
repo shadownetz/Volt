@@ -1,0 +1,350 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3.7'
+
+volumes:
+  orderer.vltenterprise.com:
+  peer0.voltlaundry.vltenterprise.com:
+  peer1.voltlaundry.vltenterprise.com:
+  peer2.voltlaundry.vltenterprise.com:
+  peer0.voltlogistics.vltenterprise.com:
+  peer1.voltlogistics.vltenterprise.com:
+  peer2.voltlogistics.vltenterprise.com:
+
+networks:
+  ordering:
+    name: volt_ordering_network
+
+services:
+
+  orderer.vltenterprise.com:
+    container_name: orderer.vltenterprise.com
+    image: hyperledger/fabric-orderer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.vltenterprise.com:9443
+      - ORDERER_METRICS_PROVIDER=prometheus
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+        - ../system-genesis-block/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ../organizations/ordererOrganizations/vltenterprise.com/orderers/orderer.vltenterprise.com/msp:/var/hyperledger/orderer/msp
+        - ../organizations/ordererOrganizations/vltenterprise.com/orderers/orderer.vltenterprise.com/tls/:/var/hyperledger/orderer/tls
+        - orderer.vltenterprise.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 7053:7053
+      - 9443:9443
+    networks:
+      - ordering
+  
+  # Volt Laundry Peer 1
+  peer0.voltlaundry.vltenterprise.com:
+    container_name: peer0.voltlaundry.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer0.voltlaundry.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer0.voltlaundry.vltenterprise.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.voltlaundry.vltenterprise.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.voltlaundry.vltenterprise.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.voltlaundry.vltenterprise.com:7051
+      - CORE_PEER_LOCALMSPID=VoltLaundryMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.voltlaundry.vltenterprise.com:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0voltlaundry"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer0.voltlaundry.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer0.voltlaundry.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.voltlaundry.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7051:7051
+      - 9444:9444
+    networks:
+      - ordering
+
+  # Volt Laundry Peer 2
+  peer1.voltlaundry.vltenterprise.com:
+    container_name: peer1.voltlaundry.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer1.voltlaundry.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer1.voltlaundry.vltenterprise.com:7151
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7151
+      - CORE_PEER_CHAINCODEADDRESS=peer1.voltlaundry.vltenterprise.com:7152
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7152
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.voltlaundry.vltenterprise.com:7151
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.voltlaundry.vltenterprise.com:7151
+      - CORE_PEER_LOCALMSPID=VoltLaundryMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.voltlaundry.vltenterprise.com:9446
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer1voltlaundry"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer1.voltlaundry.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer1.voltlaundry.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.voltlaundry.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7151:7151
+      - 9446:9446
+    networks:
+      - ordering
+
+  # Volt Laundry Peer 3
+  peer2.voltlaundry.vltenterprise.com:
+    container_name: peer2.voltlaundry.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer2.voltlaundry.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer2.voltlaundry.vltenterprise.com:7251
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7251
+      - CORE_PEER_CHAINCODEADDRESS=peer2.voltlaundry.vltenterprise.com:7252
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7252
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.voltlaundry.vltenterprise.com:7251
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.voltlaundry.vltenterprise.com:7251
+      - CORE_PEER_LOCALMSPID=VoltLaundryMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer2.voltlaundry.vltenterprise.com:9447
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer2voltlaundry"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer2.voltlaundry.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer2.voltlaundry.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer2.voltlaundry.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7251:7251
+      - 9447:9447
+    networks:
+      - ordering
+
+
+  # Volt Logistics Peer 1
+  peer0.voltlogistics.vltenterprise.com:
+    container_name: peer0.voltlogistics.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer0.voltlogistics.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer0.voltlogistics.vltenterprise.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.voltlogistics.vltenterprise.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.voltlogistics.vltenterprise.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.voltlogistics.vltenterprise.com:9051
+      - CORE_PEER_LOCALMSPID=VoltLogisticsMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.voltlogistics.vltenterprise.com:9445
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0voltlogistics"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer0.voltlogistics.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer0.voltlogistics.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.voltlogistics.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 9051:9051
+      - 9445:9445
+    networks:
+      - ordering
+
+  # Volt Logistics Peer 2
+  peer1.voltlogistics.vltenterprise.com:
+    container_name: peer1.voltlogistics.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer1.voltlogistics.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer1.voltlogistics.vltenterprise.com:9151
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9151
+      - CORE_PEER_CHAINCODEADDRESS=peer1.voltlogistics.vltenterprise.com:9152
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9152
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.voltlogistics.vltenterprise.com:9151
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.voltlogistics.vltenterprise.com:9151
+      - CORE_PEER_LOCALMSPID=VoltLogisticsMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.voltlogistics.vltenterprise.com:9448
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer1voltlogistics"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer1.voltlogistics.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer1.voltlogistics.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.voltlogistics.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 9151:9151
+      - 9448:9448
+    networks:
+      - ordering
+
+  # Volt Logistics Peer 3
+  peer2.voltlogistics.vltenterprise.com:
+    container_name: peer2.voltlogistics.vltenterprise.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=volt_ordering_network
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer2.voltlogistics.vltenterprise.com
+      - CORE_PEER_ADDRESS=peer2.voltlogistics.vltenterprise.com:9152
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9152
+      - CORE_PEER_CHAINCODEADDRESS=peer2.voltlogistics.vltenterprise.com:9153
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9153
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.voltlogistics.vltenterprise.com:9152
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.voltlogistics.vltenterprise.com:9152
+      - CORE_PEER_LOCALMSPID=VoltLogisticsMSP
+      - CORE_OPERATIONS_LISTENADDRESS=peer2.voltlogistics.vltenterprise.com:9449
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer2voltlogistics"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ${DOCKER_SOCK}:/host/var/run/docker.sock
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer2.voltlogistics.vltenterprise.com/msp:/etc/hyperledger/fabric/msp
+        - ../organizations/peerOrganizations/voltlogistics.vltenterprise.com/peers/peer2.voltlogistics.vltenterprise.com/tls:/etc/hyperledger/fabric/tls
+        - peer2.voltlogistics.vltenterprise.com:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 9152:9053
+      - 9449:9449
+    networks:
+      - ordering
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:latest
+    labels:
+      service: hyperledger-fabric
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - ../organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations
+        - ../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+    depends_on:
+      - peer0.voltlaundry.vltenterprise.com
+      - peer1.voltlaundry.vltenterprise.com
+      - peer2.voltlaundry.vltenterprise.com
+      - peer0.voltlogistics.vltenterprise.com
+      - peer1.voltlogistics.vltenterprise.com
+      - peer2.voltlogistics.vltenterprise.com
+    networks:
+      - ordering

@@ -1,0 +1,71 @@
+{
+    "name": "volt-ordering-network-voltlogistics",
+    "version": "1.0.0",
+    "client": {
+        "organization": "VoltLogistics",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                }
+            }
+        }
+    },
+    "organizations": {
+        "voltlogistics": {
+            "mspid": "VoltLogisticsMSP",
+            "peers": [
+                "peer0.voltlogistics.vltenterprise.com",
+                "peer1.voltlogistics.vltenterprise.com",
+                "peer2.voltlogistics.vltenterprise.com"
+            ],
+            "certificateAuthorities": [
+                "ca.voltlogistics.vltenterprise.com"
+            ]
+        }
+    },
+    "peers": {
+        "peer0.voltlogistics.vltenterprise.com": {
+            "url": "grpcs://localhost:9051",
+            "tlsCACerts": {
+                "pem": "${PEERPEM}"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.voltlogistics.vltenterprise.com",
+                "hostnameOverride": "peer0.voltlogistics.vltenterprise.com"
+            }
+        },
+        "peer1.voltlogistics.vltenterprise.com": {
+            "url": "grpcs://localhost:9151",
+            "tlsCACerts": {
+                "pem": "${PEERPEM}"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer1.voltlogistics.vltenterprise.com",
+                "hostnameOverride": "peer1.voltlogistics.vltenterprise.com"
+            }
+        },
+        "peer2.voltlogistics.vltenterprise.com": {
+            "url": "grpcs://localhost:9251",
+            "tlsCACerts": {
+                "pem": "${PEERPEM}"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer2.voltlogistics.vltenterprise.com",
+                "hostnameOverride": "peer2.voltlogistics.vltenterprise.com"
+            }
+        }
+    },
+    "certificateAuthorities": {
+        "ca.voltlogistics.vltenterprise.com": {
+            "url": "https://localhost:8054",
+            "caName": "ca-voltlogistics",
+            "tlsCACerts": {
+                "pem": ["${CAPEM}"]
+            },
+            "httpOptions": {
+                "verify": false
+            }
+        }
+    }
+}

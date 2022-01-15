@@ -1,0 +1,53 @@
+---
+name: volt-ordering-network-voltlaundry
+version: 1.0.0
+client:
+  organization: VoltLaundry
+  connection:
+    timeout:
+      peer:
+        endorser: '300'
+organizations:
+  VoltLaundry:
+    mspid: VoltLaundryMSP
+    peers:
+    - peer0.voltlaundry.vltenterprise.com
+    - peer1.voltlaundry.vltenterprise.com
+    - peer2.voltlaundry.vltenterprise.com
+    certificateAuthorities:
+    - ca.voltlaundry.vltenterprise.com
+peers:
+  peer0.voltlaundry.vltenterprise.com:
+    url: grpcs://localhost:7051
+    tlsCACerts:
+      pem: |
+          ${PEERPEM}
+    grpcOptions:
+      ssl-target-name-override: peer0.voltlaundry.vltenterprise.com
+      hostnameOverride: peer0.voltlaundry.vltenterprise.com
+  peer1.voltlaundry.vltenterprise.com:
+    url: grpcs://localhost:7151
+    tlsCACerts:
+      pem: |
+          ${PEERPEM}
+    grpcOptions:
+      ssl-target-name-override: peer1.voltlaundry.vltenterprise.com
+      hostnameOverride: peer1.voltlaundry.vltenterprise.com
+  peer2.voltlaundry.vltenterprise.com:
+    url: grpcs://localhost:7251
+    tlsCACerts:
+      pem: |
+          ${PEERPEM}
+    grpcOptions:
+      ssl-target-name-override: peer2.voltlaundry.vltenterprise.com
+      hostnameOverride: peer2.voltlaundry.vltenterprise.com
+certificateAuthorities:
+  ca.voltlaundry.vltenterprise.com:
+    url: https://localhost:7054
+    caName: ca-voltlaundry
+    tlsCACerts:
+      pem: 
+        - |
+          ${CAPEM}
+    httpOptions:
+      verify: false
