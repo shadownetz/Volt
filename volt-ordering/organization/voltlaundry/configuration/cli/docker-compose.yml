@@ -1,0 +1,37 @@
+#
+# Copyright IBM Corp All Rights Reserved
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '2'
+
+networks:
+  basic:
+    external:
+      name: volt_ordering_network
+
+services:
+  cliMagnetoCorp:
+    container_name: cliVoltLaundry
+    image: hyperledger/fabric-tools:2.0.0-beta
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.voltlaundry.vltenterprise.com:7051
+      - CORE_PEER_LOCALMSPID=VoltLaundryMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/voltlaundry.vltenterprise.com/users/Admin@voltlaundry.vltenterprise.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/voltlaundry.vltenterprise.com/peers/peer0.voltlaundry.vltenterprise.com/tls/ca.crt
+      - ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/vltenterprise.com/orderers/orderer.vltenterprise.com/msp/tlscacerts/tlsca.vltenterprise.com-cert.pem
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - /var/run/docker.sock:/host/var/run/docker.sock
+        - ./../../../../organization/voltlaundry:/opt/gopath/src/github.com/
+        - ./../../../../../volt_ordering_network/organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+    networks:
+        - ordering

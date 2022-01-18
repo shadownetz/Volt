@@ -1,0 +1,4 @@
+cp.tar.gz
+**/.gradle
+**/gateway/connection-voltlaundry.yaml
+**/gateway/connection-voltlogistics.yaml
