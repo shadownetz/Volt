@@ -34,4 +34,4 @@ cp "${DIR}/../${NETWORK_FOLDER}/organizations/peerOrganizations/voltlogistics.vl
 cp "${DIR}/../${NETWORK_FOLDER}/organizations/peerOrganizations/voltlogistics.vltenterprise.com/users/User1@voltlogistics.vltenterprise.com/msp/keystore/"* "${DIR}/../${NETWORK_FOLDER}/organizations/peerOrganizations/voltlogistics.vltenterprise.com/users/User1@voltlogistics.vltenterprise.com/msp/keystore/priv_sk"
 
 echo Suggest that you monitor the docker containers by running
-echo "./organization/voltlaundry/configuration/cli/monitordocker.sh volt_ordering_network"
+echo "./organization/voltlaundry/configuration/cli/monitor-docker.sh volt_ordering_network"

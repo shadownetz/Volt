@@ -55,39 +55,85 @@ class OrderContract extends Contract {
         console.log('Instantiate the contract');
     }
 
+
     /**
-     * Place An Order
+     * Process an order
      *
-     * @param {Context} ctx the transaction context
-     * @param {String} owner peer creator of the order
-     * @param {String} orderNumber user friendly reference for order
-     * @param {String} createdAt timestamp of order creation
-     * @param {String} createdBy user reference who created the order
-     * @param {String} deliveryMode PICKUP | DROPOFF
-     * @param {String} serviceType  WASH_IRON | IRON | DRY_CLEAN
-     * @param {Integer} totalOrder total number of order placed
-     * @param {Float} amount total cost of order
-     * @param {String} currency 
-    */
-    async place(ctx, owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, totalOrder, amount, currency) {
+      * @param {Context} ctx the transaction context
+      * @param {String} owner peer creator of the order
+      * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
+     */
+    async process(ctx, owner, orderNumber, logistics) {
 
-        // create an instance of the paper
-        let order = Order.createInstance(owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, parseInt(totalOrder), parseFloat(amount), currency);
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
 
-        // Smart contract, rather than order, moves order into PLACED state
-        order.setPlaced();
+        // Validate current owner
+        if (order.getOwner() !== owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
+        }
+        order.setLogistics(logistics);
+        order.setProcessing();
+        order.setUpdateTimestamp(new Date().valueOf());
 
-        // save the owner's MSP 
-        let mspid = ctx.clientIdentity.getMSPID();
-        order.setOwnerMSP(mspid);
+        // Update the order
+        await ctx.orderList.updateOrder(order);
+        return order;
+    }
 
-        // Newly issued order is owned by the issuer to begin with (recorded for reporting purposes)
-        order.setOwner(owner);
+    /**
+     * Ship an order after an order has been processed
+     *
+      * @param {Context} ctx the transaction context
+      * @param {String} owner peer creator of the order
+      * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
+     */
+     async ship(ctx, owner, orderNumber, logistics) {
 
-        // Add the paper to the list of all similar orders in the ledger world state
-        await ctx.orderList.addOrder(order);
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
 
-        // Must return a serialized order to caller of smart contract
+        // Validate current owner
+        if (order.getOwner() !== owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
+        }
+        order.setLogistics(logistics);
+        order.setShipped();
+        order.setUpdateTimestamp(new Date().valueOf());
+
+        // Update the order
+        await ctx.orderList.updateOrder(order);
+        return order;
+    }
+
+    /**
+     * Deliver an order after an order has been shipped
+     *
+      * @param {Context} ctx the transaction context
+      * @param {String} owner peer creator of the order
+      * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
+     */
+     async deliver(ctx, owner, orderNumber, logistics) {
+
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
+
+        // Validate current owner
+        if (order.getOwner() !== owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
+        }
+        order.setLogistics(logistics);
+        order.setDelivered();
+        order.setUpdateTimestamp(new Date().valueOf());
+
+        // Update the order
+        await ctx.orderList.updateOrder(order);
         return order;
     }
 
@@ -98,7 +144,7 @@ class OrderContract extends Contract {
       * @param {String} owner peer creator of the order
       * @param {String} orderNumber user friendly reference for order
      */
-    async cancel(ctx, owner, orderNumber) {
+     async cancel(ctx, owner, orderNumber) {
 
         // Retrieve the current paper using key fields provided
         let orderKey = Order.makeKey([owner, orderNumber]);
@@ -108,11 +154,10 @@ class OrderContract extends Contract {
         if (order.getOwner() !== owner) {
             throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
         }
-
         order.setUpdateTimestamp(new Date().valueOf());
         order.setCancelled();
 
-        // Update the paper
+        // Update the order
         await ctx.orderList.updateOrder(order);
         return order;
     }

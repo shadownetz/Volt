@@ -61,7 +61,7 @@ class Order extends State {
      * 
      * @param {Number} updatedAt updated timestamp in miliseconds
      */
-     setUpdateTimestamp(updatedAt){
+    setUpdateTimestamp(updatedAt){
         this.updatedAt = updatedAt;
     }
 
