@@ -1,4 +1,4 @@
-﻿## **VoltLaundry | Hyperledger Fabric Laundry Solution**
+﻿## **VLT Enterprise | Hyperledger Fabric Ordering Solution**
 
 ## Brief Overview
 
