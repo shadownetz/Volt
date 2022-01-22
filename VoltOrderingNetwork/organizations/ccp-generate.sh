@@ -17,7 +17,7 @@ function yaml_ccp_voltlaundry {
     local CP=$(one_line_pem $2)
     sed -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
-        organizations/ccp/voltlaundry/connection.voltlaundry.yaml | sed -e $'s/\\\\n/\\\n          /g'
+        organizations/ccp/voltlaundry/connection-voltlaundry.yaml | sed -e $'s/\\\\n/\\\n          /g'
 }
 
 function json_ccp_voltlogistics {
@@ -25,7 +25,7 @@ function json_ccp_voltlogistics {
     local CP=$(one_line_pem $2)
     sed -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
-        organizations/ccp/voltlaundry/connection-voltlogistics.json
+        organizations/ccp/voltlogistics/connection-voltlogistics.json
 }
 
 function yaml_ccp_voltlogistics {
@@ -33,7 +33,7 @@ function yaml_ccp_voltlogistics {
     local CP=$(one_line_pem $2)
     sed -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
-        organizations/ccp/voltlaundry/connection.voltlogistics.yaml | sed -e $'s/\\\\n/\\\n          /g'
+        organizations/ccp/voltlogistics/connection-voltlogistics.yaml | sed -e $'s/\\\\n/\\\n          /g'
 }
 
 ORG=voltlaundry
