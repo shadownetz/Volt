@@ -1,0 +1,26 @@
+{
+  "name": "ordering-rest-api",
+  "version": "1.0.0",
+  "description": "VLT Ordering REST API",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "vltenterprise",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.1",
+    "cors": "^2.8.5",
+    "dotenv": "^14.2.0",
+    "express": "^4.17.2",
+    "fabric-ca-client": "^2.2.11",
+    "fabric-network": "^2.2.11",
+    "helmet": "^5.0.2",
+    "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^8.5.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}

@@ -129,12 +129,13 @@ class Order extends State {
      * Factory method to create an order object
      * @param {String} owner peer creator of the order
      * @param {String} orderNumber user friendly reference for order
-     * @param {String} createdAt timestamp of order creation
+     * @param {String} createdBy
+     * @param {Number} createdAt timestamp of order creation in milliseconds
      * @param {String} deliveryMode PICKUP | DROPOFF
      * @param {String} serviceType  WASH_IRON | IRON | DRY_CLEAN
      * @param {Integer} totalOrder total number of order placed
-     * @param {Float} amount total cost of order
-     * @param {String} currency 
+     * @param {Number} amount total cost of order
+     * @param {String} currency
      */
     static createInstance(owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, totalOrder, amount, currency) {
         return new Order(
@@ -155,7 +156,7 @@ class Order extends State {
     }
 
     static getClass() {
-        return 'org.volt.orderingnetwork.order';
+        return 'org.orderingnetwork.order';
     }
 }
 

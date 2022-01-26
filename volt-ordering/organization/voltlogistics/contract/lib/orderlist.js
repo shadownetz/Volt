@@ -14,7 +14,7 @@ const Order = require('./order.js');
 class OrderList extends StateList {
 
     constructor(ctx) {
-        super(ctx, 'org.volt.orderingnetwork.order');
+        super(ctx, 'org.orderingnetwork.order');
         this.use(Order);
     }
 

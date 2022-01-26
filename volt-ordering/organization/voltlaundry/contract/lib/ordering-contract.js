@@ -35,7 +35,8 @@ class OrderContract extends Contract {
 
     constructor() {
         // Unique namespace when multiple contracts per chaincode file
-        super('org.volt.orderingnetwork.order');
+        super('org.orderingnetwork.order');
+        this.owner='voltlaundry';
     }
 
     /**
@@ -59,20 +60,18 @@ class OrderContract extends Contract {
      * Place An Order
      *
      * @param {Context} ctx the transaction context
-     * @param {String} owner peer creator of the order
      * @param {String} orderNumber user friendly reference for order
-     * @param {String} createdAt timestamp of order creation
+     * @param {Number} createdAt timestamp of order creation in milliseconds
      * @param {String} createdBy user reference who created the order
      * @param {String} deliveryMode PICKUP | DROPOFF
      * @param {String} serviceType  WASH_IRON | IRON | DRY_CLEAN
      * @param {Integer} totalOrder total number of order placed
-     * @param {Float} amount total cost of order
+     * @param {Number} amount total cost of order
      * @param {String} currency 
     */
-    async place(ctx, owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, totalOrder, amount, currency) {
-
+    async place(ctx, orderNumber, createdBy, createdAt, deliveryMode, serviceType, totalOrder, amount, currency) {
         // create an instance of the paper
-        let order = Order.createInstance(owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, parseInt(totalOrder), parseFloat(amount), currency);
+        let order = Order.createInstance(this.owner, orderNumber, createdBy, createdAt, deliveryMode, serviceType, parseInt(totalOrder), parseFloat(amount), currency);
 
         // Smart contract, rather than order, moves order into PLACED state
         order.setPlaced();
@@ -82,7 +81,7 @@ class OrderContract extends Contract {
         order.setOwnerMSP(mspid);
 
         // Newly issued order is owned by the issuer to begin with (recorded for reporting purposes)
-        order.setOwner(owner);
+        order.setOwner(this.owner);
 
         // Add the paper to the list of all similar orders in the ledger world state
         await ctx.orderList.addOrder(order);
@@ -92,21 +91,97 @@ class OrderContract extends Contract {
     }
 
     /**
-     * Cancel an order
-     *
+     * Process an order
       * @param {Context} ctx the transaction context
-      * @param {String} owner peer creator of the order
       * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
      */
-    async cancel(ctx, owner, orderNumber) {
+     async process(ctx, orderNumber, logistics) {
 
         // Retrieve the current paper using key fields provided
-        let orderKey = Order.makeKey([owner, orderNumber]);
+        let orderKey = Order.makeKey([this.owner, orderNumber]);
         let order = await ctx.orderList.getOrder(orderKey);
 
         // Validate current owner
-        if (order.getOwner() !== owner) {
-            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
+        if (order.getOwner() !== this.owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + this.owner);
+        }
+        order.setLogistics(logistics);
+        order.setProcessing();
+        order.setUpdateTimestamp(new Date().valueOf());
+
+        // Update the order
+        await ctx.orderList.updateOrder(order);
+        return order;
+    }
+
+    /**
+     * Ship an order after an order has been processed
+     *
+      * @param {Context} ctx the transaction context
+      * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
+     */
+     async ship(ctx, orderNumber, logistics) {
+
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([this.owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
+
+        // Validate current owner
+        if (order.getOwner() !== this.owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + this.owner);
+        }
+        order.setLogistics(logistics);
+        order.setShipped();
+        order.setUpdateTimestamp(new Date().valueOf());
+
+        // Update the order
+        await ctx.orderList.updateOrder(order);
+        return order;
+    }
+
+    /**
+     * Deliver an order after an order has been shipped
+     *
+      * @param {Context} ctx the transaction context
+      * @param {String} orderNumber user friendly reference for order
+      * @param {String} logistics reference for assigned logistics
+     */
+     async deliver(ctx, orderNumber, logistics) {
+
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([this.owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
+
+        // Validate current owner
+        if (order.getOwner() !== this.owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + this.owner);
+        }
+        order.setLogistics(logistics);
+        order.setDelivered();
+        order.setUpdateTimestamp(new Date().valueOf());
+
+        // Update the order
+        await ctx.orderList.updateOrder(order);
+        return order;
+    }
+
+    /**
+     * Cancel an order
+     *
+      * @param {Context} ctx the transaction context
+      * @param {String} orderNumber user friendly reference for order
+     */
+    async cancel(ctx, orderNumber) {
+
+        // Retrieve the current paper using key fields provided
+        let orderKey = Order.makeKey([this.owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderKey);
+
+        // Validate current owner
+        if (order.getOwner() !== this.owner) {
+            throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + this.owner);
         }
 
         order.setUpdateTimestamp(new Date().valueOf());
@@ -123,15 +198,14 @@ class OrderContract extends Contract {
     /**
      * Query history of an order
      * @param {Context} ctx the transaction context
-     * @param {String} owner peer creator of the order
      * @param {String} orderNumber user friendly reference for order
     */
-    async queryHistory(ctx, owner, orderNumber) {
+    async queryHistory(ctx, orderNumber) {
 
         // Get a key to be used for History query
 
-        let query = new QueryUtils(ctx, 'org.volt.orderingnetwork.order');
-        let results = await query.getAssetHistory(owner, orderNumber); // (cpKey);
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
+        let results = await query.getAssetHistory(this.owner, orderNumber); // (cpKey);
         return results;
 
     }
@@ -139,12 +213,11 @@ class OrderContract extends Contract {
     /**
     * queryOwner order: supply name of owning org, to find list of orders based on owner field
     * @param {Context} ctx the transaction context
-    * @param {String} owner order peer owner
     */
-    async queryOwner(ctx, owner) {
+    async queryOwner(ctx) {
 
-        let query = new QueryUtils(ctx, 'org.volt.orderingnetwork.order');
-        let owner_results = await query.queryKeyByOwner(owner);
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
+        let owner_results = await query.queryKeyByOwner(this.owner);
 
         return owner_results;
     }
@@ -156,7 +229,7 @@ class OrderContract extends Contract {
     */
     async queryPartial(ctx, prefix) {
 
-        let query = new QueryUtils(ctx, 'org.volt.orderingnetwork.order');
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
         let partial_results = await query.queryKeyByPartial(prefix);
 
         return partial_results;
@@ -173,7 +246,7 @@ class OrderContract extends Contract {
     */
     async queryAdhoc(ctx, queryString) {
 
-        let query = new QueryUtils(ctx, 'org.volt.orderingnetwork.order');
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
         let querySelector = JSON.parse(queryString);
         let adhoc_results = await query.queryByAdhoc(querySelector);
 
@@ -212,7 +285,7 @@ class OrderContract extends Contract {
                 throw new Error('invalid named query supplied: ' + queryname + '- please try again ');
         }
 
-        let query = new QueryUtils(ctx, 'org.volt.orderingnetwork.order');
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
         let adhoc_results = await query.queryByAdhoc(querySelector);
 
         return adhoc_results;
