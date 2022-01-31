@@ -36,6 +36,21 @@ class QueryUtils {
         return results;
     }
 
+    /**
+     * Get Asset for an order
+     * @param {String} owner the order ussuer
+     * @param {String} orderNumber order number
+     * @returns {String}
+     */
+     async getAsset(owner, orderNumber){
+        let ledgerKey = await this.ctx.stub.createCompositeKey(this.name, [owner, orderNumber]);
+        const assetJSON = await this.ctx.stub.getState(ledgerKey); // get the asset from chaincode state
+        if (!assetJSON || assetJSON.length === 0) {
+            throw new Error(`The asset ${orderNumber} does not exist`);
+        }
+        return assetJSON.toString();
+    }
+
     // ===========================================================================================
     // queryKeyByPartial performs a partial query based on the namespace and  asset key prefix provided
 

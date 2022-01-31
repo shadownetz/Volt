@@ -43,7 +43,7 @@ peers:
       hostnameOverride: peer2.voltlogistics.vltenterprise.com
 certificateAuthorities:
   ca.voltlogistics.vltenterprise.com:
-    url: https://localhost:7054
+    url: https://localhost:8054
     caName: ca-voltlogistics
     tlsCACerts:
       pem: 

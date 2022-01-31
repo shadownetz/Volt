@@ -10,6 +10,8 @@ const CONNECTION_CONFIG_PATH = [
     '..','..','..','volt-ordering','organization','voltlaundry','gateway','connection-voltlaundry.yaml'
 ]
 const CustomResponse = require("../../utils/customResponse");
+const ORDER_OWNER="voltlaundry";
+const orderQueriesRoute = require("./orderQueries");
 
 
 // app.use((req, res, next)=>{
@@ -37,15 +39,16 @@ app.post('/place-order', async (req, res)=>{
         CONNECTION_CONFIG_PATH: path.join(__dirname, ...CONNECTION_CONFIG_PATH)
     });
     const response = new CustomResponse();
-
+    const createdAt = new Date().valueOf().toString();
     try{
         await fabric.connectGateway();
         const contract = await fabric.getContract();
         const placeOrderResponse = await contract.submitTransaction(
             'place',
             orderNumber,
+            ORDER_OWNER,
             userId,
-            new Date().valueOf().toString(),
+            createdAt,
             deliveryMode,
             serviceType,
             totalOrder,
@@ -77,7 +80,7 @@ app.post('/cancel-order', async(req, res)=>{
     try{
         await fabric.connectGateway();
         const contract = await fabric.getContract();
-        const cancelOrderResponse = await contract.submitTransaction('cancel', orderNumber);
+        const cancelOrderResponse = await contract.submitTransaction('cancel', ORDER_OWNER, orderNumber, new Date().valueOf().toString());
         const order = ORDER.fromBuffer(cancelOrderResponse);
         response.setMessage(`${order.owner} successfully cancelled order #${order.orderNumber}`);
         console.log(response.message);
@@ -107,7 +110,8 @@ app.post('/enroll-user', async(req, res)=>{
         response.hasError(`Error enrolling user: ${e}`)
     }
     return res.json(response);
-})
+});
 
+app.use("/queries", orderQueriesRoute);
 
 module.exports = app;

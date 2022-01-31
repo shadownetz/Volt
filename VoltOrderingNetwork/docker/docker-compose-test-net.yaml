@@ -298,12 +298,12 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
       - CORE_PEER_ID=peer2.voltlogistics.vltenterprise.com
-      - CORE_PEER_ADDRESS=peer2.voltlogistics.vltenterprise.com:9152
-      - CORE_PEER_LISTENADDRESS=0.0.0.0:9152
-      - CORE_PEER_CHAINCODEADDRESS=peer2.voltlogistics.vltenterprise.com:9153
-      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9153
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.voltlogistics.vltenterprise.com:9152
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.voltlogistics.vltenterprise.com:9152
+      - CORE_PEER_ADDRESS=peer2.voltlogistics.vltenterprise.com:9251
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9251
+      - CORE_PEER_CHAINCODEADDRESS=peer2.voltlogistics.vltenterprise.com:9252
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9252
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.voltlogistics.vltenterprise.com:9251
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.voltlogistics.vltenterprise.com:9251
       - CORE_PEER_LOCALMSPID=VoltLogisticsMSP
       - CORE_OPERATIONS_LISTENADDRESS=peer2.voltlogistics.vltenterprise.com:9449
       - CORE_METRICS_PROVIDER=prometheus
@@ -317,7 +317,7 @@ services:
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start
     ports:
-      - 9152:9053
+      - 9251:9251
       - 9449:9449
     networks:
       - ordering

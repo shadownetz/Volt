@@ -178,6 +178,8 @@ function createOrgs() {
     do
       if [ ! -f "organizations/fabric-ca/voltlaundry/tls-cert.pem" ]; then
         sleep 1
+      elif [ ! -f "organizations/fabric-ca/voltlogistics/tls-cert.pem" ]; then
+        sleep 1
       else
         break
       fi
