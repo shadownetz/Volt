@@ -10,6 +10,7 @@ const PORT = 3000;
 const authMiddleware = require("./middleware/auth");
 const laundryRoute = require("./routes/laundry/laundry");
 const logisticsRoute = require("./routes/logistics/logistics");
+const networkRoute = require("./routes/network/network");
 
 app.use(helmet());
 app.use(cors());
@@ -19,6 +20,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(authMiddleware.API_ACCESS);
 app.use('/laundry', laundryRoute);
 app.use('/logistics', logisticsRoute);
+app.use('/network', networkRoute);
 
 
 app.use(function(req, res) {

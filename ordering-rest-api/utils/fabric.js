@@ -56,10 +56,23 @@ class Fabric{
         await wallet.put(this.user, x509Identity);
     }
 
+    /**
+     * get contract by name
+     * defaults to network contract 'orderingcontract'
+     * @param {String} name 
+     * @returns Contract
+     */
     async getContract(){
+        const default_contract = process.env.FABRIC_CONTRACT_NAME;
         console.log("Using network channel "+process.env.FABRIC_NETWORK_CHANNEL);
-        const network = await this.gateway.getNetwork(process.env.FABRIC_NETWORK_CHANNEL);
-        return network.getContract(process.env.FABRIC_CONTRACT_NAME, ORDER.getClass());
+        const network = await this.gateway.getNetwork(`${process.env.FABRIC_NETWORK_CHANNEL}`);
+        return network.getContract(name || default_contract, ORDER.getClass());
+    }
+    async getSystemContract(name){
+        const default_contract = process.env.FABRIC_CONTRACT_NAME;
+        console.log("Using network channel "+process.env.FABRIC_NETWORK_CHANNEL);
+        const network = await this.gateway.getNetwork(`${process.env.FABRIC_NETWORK_CHANNEL}`);
+        return network.getContract(name);
     }
     disconnectGateway(){
         return this.gateway.disconnect();
