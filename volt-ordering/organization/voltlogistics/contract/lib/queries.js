@@ -29,8 +29,8 @@ class QueryUtils {
     */
     async getAssetHistory(owner, orderNumber) {
 
-        let ledgerKey = await this.ctx.stub.createCompositeKey(this.name, [owner, orderNumber]);
-        const resultsIterator = await this.ctx.stub.getHistoryForKey(ledgerKey);
+        // let ledgerKey = await this.ctx.stub.createCompositeKey(this.name, [owner, orderNumber]);
+        const resultsIterator = await this.ctx.stub.getHistoryForKey(orderNumber);
         let results = await this.getAllResults(resultsIterator, true);
 
         return results;
@@ -43,8 +43,8 @@ class QueryUtils {
      * @returns {String}
      */
      async getAsset(owner, orderNumber){
-        let ledgerKey = await this.ctx.stub.createCompositeKey(this.name, [owner, orderNumber]);
-        const assetJSON = await this.ctx.stub.getState(ledgerKey); // get the asset from chaincode state
+        // let ledgerKey = await this.ctx.stub.createCompositeKey(this.name, [owner, orderNumber]);
+        const assetJSON = await this.ctx.stub.getState(orderNumber); // get the asset from chaincode state
         if (!assetJSON || assetJSON.length === 0) {
             throw new Error(`The asset ${orderNumber} does not exist`);
         }
@@ -78,6 +78,22 @@ class QueryUtils {
         let method = this.getAllResults;
         let results = await method(resultsIterator, false);
 
+        return results;
+    }
+
+    /**
+     * Get Assets by specified range
+     * @param {String} startKey asset key
+     * @param {String} endKey asset key
+     * @returns Map|Array
+     */
+
+    async getAssetsByRange(startKey, endKey){
+        if (arguments.length < 2) {
+            throw new Error('Incorrect number of arguments. Expecting 2');
+        }
+        const resultsIterator = await this.ctx.stub.getStateByRange(startKey, endKey);
+        let results = await this.getAllResults(resultsIterator, false);
         return results;
     }
 

@@ -129,8 +129,8 @@ class OrderContract extends Contract {
     async ship(ctx,owner, orderNumber, logistics, updatedAt) {
 
         // Retrieve the current paper using key fields provided
-        let orderKey = Order.makeKey([owner, orderNumber]);
-        let order = await ctx.orderList.getOrder(orderKey);
+        // let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderNumber);
         // Validate current owner
         if (order.getOwner() !== owner) {
             throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
@@ -156,8 +156,8 @@ class OrderContract extends Contract {
     async deliver(ctx,owner, orderNumber, logistics, updatedAt) {
 
         // Retrieve the current paper using key fields provided
-        let orderKey = Order.makeKey([owner, orderNumber]);
-        let order = await ctx.orderList.getOrder(orderKey);
+        // let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderNumber);
         // Validate current owner
         if (order.getOwner() !== owner) {
             throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
@@ -182,8 +182,8 @@ class OrderContract extends Contract {
     async cancel(ctx,owner, orderNumber, updatedAt) {
 
         // Retrieve the current paper using key fields provided
-        let orderKey = Order.makeKey([owner, orderNumber]);
-        let order = await ctx.orderList.getOrder(orderKey);
+        // let orderKey = Order.makeKey([owner, orderNumber]);
+        let order = await ctx.orderList.getOrder(orderNumber);
         // Validate current owner
         if (order.getOwner() !== owner) {
             throw new Error('\nOrder ' + orderNumber + ' is not owned by ' + owner);
@@ -272,6 +272,19 @@ class OrderContract extends Contract {
         return adhoc_results;
     }
 
+    /**
+     * Get orders by key range
+     * Set both start and end to empty string for all results
+     * @param {Context} ctx 
+     * @param {String} startKey 
+     * @param {String} endKey 
+     * @returns Map|Array
+     */
+    async queryRange(ctx, startKey, endKey){
+        let query = new QueryUtils(ctx, 'org.orderingnetwork.order');
+        let results = await query.getAssetsByRange(startKey, endKey);
+        return results;
+    }
 
     /**
      * queryNamed - supply named query - 'case' statement chooses selector to build (pre-canned for demo purposes)

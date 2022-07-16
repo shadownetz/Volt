@@ -19,7 +19,7 @@ class OrderList extends StateList {
     }
 
     async addOrder(order) {
-        return this.addState(order);
+        return this.addState(order, order.orderNumber);
     }
 
     async getOrder(orderKey) {
@@ -27,7 +27,7 @@ class OrderList extends StateList {
     }
 
     async updateOrder(order) {
-        return this.updateState(order);
+        return this.updateState(order, order.orderNumber);
     }
 }
 

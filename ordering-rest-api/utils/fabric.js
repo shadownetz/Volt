@@ -3,7 +3,7 @@ const FabricCAServices = require('fabric-ca-client');
 const fs = require('fs');
 const yaml = require('js-yaml');
 const ORDER = require("../../volt-ordering/organization/voltlaundry/contract/lib/order");
-const path = require("path");
+const fabproto6 = require("fabric-protos");
 
 class Fabric{
     constructor({userId,USER_FILE_WALLET_PATH,CONNECTION_CONFIG_PATH}) {
@@ -59,21 +59,43 @@ class Fabric{
     /**
      * get contract by name
      * defaults to network contract 'orderingcontract'
-     * @param {String} name 
      * @returns Contract
      */
     async getContract(){
-        const default_contract = process.env.FABRIC_CONTRACT_NAME;
-        console.log("Using network channel "+process.env.FABRIC_NETWORK_CHANNEL);
         const network = await this.gateway.getNetwork(`${process.env.FABRIC_NETWORK_CHANNEL}`);
-        return network.getContract(name || default_contract, ORDER.getClass());
+        return network.getContract(process.env.FABRIC_CONTRACT_NAME, ORDER.getClass());
     }
     async getSystemContract(name){
-        const default_contract = process.env.FABRIC_CONTRACT_NAME;
-        console.log("Using network channel "+process.env.FABRIC_NETWORK_CHANNEL);
         const network = await this.gateway.getNetwork(`${process.env.FABRIC_NETWORK_CHANNEL}`);
         return network.getContract(name);
     }
+    async getBlockHeight(){
+        await this.connectGateway();
+        // get system chain code contract
+        const contract = await this.getSystemContract( 'qscc');
+        // get chain info (height, etc)
+        const resultByte = await contract.evaluateTransaction('GetChainInfo', `${process.env.FABRIC_NETWORK_CHANNEL}`, '');
+        const blockProto = fabproto6.common.BlockchainInfo.decode(resultByte);
+        return Number.parseInt(blockProto.height);
+    }
+    async getBlockInfo(blockNumber){
+        await this.connectGateway();
+        const contract = await this.getSystemContract( 'qscc');
+        const resultByte = await contract.evaluateTransaction('GetBlockByNumber', `${process.env.FABRIC_NETWORK_CHANNEL}`, String(blockNumber));
+        return fabproto6.common.Block.decode(resultByte);
+    }
+    async getTransactionInfo(txId){
+        await this.connectGateway();
+        const contract = await this.getSystemContract( 'qscc');
+        const resultByte = await contract.evaluateTransaction('GetTransactionByID', `${process.env.FABRIC_NETWORK_CHANNEL}`, String(txId));
+        return fabproto6.protos.Transaction.decode(resultByte);
+    }
+    async getAllAssets(){
+        await this.connectGateway();
+        const contract = await this.getContract();
+        return await contract.evaluateTransaction('queryRange', '','');
+    }
+
     disconnectGateway(){
         return this.gateway.disconnect();
     }
